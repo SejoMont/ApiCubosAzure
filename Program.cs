@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using Azure.Storage.Blobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,11 +22,13 @@ KeyVaultSecret connectionStringSecret = await secretClient.GetSecretAsync("conne
 KeyVaultSecret issuerSecret = await secretClient.GetSecretAsync("issuersmc");
 KeyVaultSecret audienceSecret = await secretClient.GetSecretAsync("audiencesmc");
 KeyVaultSecret secretKeySecret = await secretClient.GetSecretAsync("secretkeysmc");
+KeyVaultSecret blobSecret = await secretClient.GetSecretAsync("blobsmc");
 
 string connectionString = connectionStringSecret.Value;
 string issuer = issuerSecret.Value;
 string audience = audienceSecret.Value;
 string secretKey = secretKeySecret.Value;
+string blob = blobSecret.Value;
 
 HelperActionServicesOAuth helper = new HelperActionServicesOAuth(issuer, audience, secretKey);
 

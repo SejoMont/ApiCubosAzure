@@ -1,6 +1,7 @@
 ﻿using ApiCubosAzure.Helpers;
 using ApiCubosAzure.Models;
 using ApiCubosAzure.Repositories;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Numerics;
 using System.Security.Claims;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace ApiCubosAzure.Controllers
 {
@@ -18,12 +20,14 @@ namespace ApiCubosAzure.Controllers
     {
         private RepositoryCubos repo;
         private HelperActionServicesOAuth helper;
+        private SecretClient secretClient;
 
         public AuthController(RepositoryCubos repo,
-           HelperActionServicesOAuth helper)
+           HelperActionServicesOAuth helper, SecretClient secret)
         {
             this.repo = repo;
             this.helper = helper;
+            this.secretClient = secret;
         }
 
         [HttpPost]
@@ -91,6 +95,12 @@ namespace ApiCubosAzure.Controllers
 
             string jsonUser = claim.Value;
             Usuario user = JsonConvert.DeserializeObject<Usuario>(jsonUser);
+
+            KeyVaultSecret secret = await this.secretClient.GetSecretAsync("blobsmc");
+
+            string bloburl = secret.Value;
+
+            user.Imagen = bloburl + "usuarios/" + user.Imagen;
             return user;
 
         }

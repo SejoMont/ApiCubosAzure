@@ -1,5 +1,6 @@
 ﻿using ApiCubosAzure.Data;
 using ApiCubosAzure.Models;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.EntityFrameworkCore;
 using System.Numerics;
 
@@ -8,10 +9,12 @@ namespace ApiCubosAzure.Repositories
     public class RepositoryCubos
     {
         private CubosContext context;
+        private SecretClient secretClient;
 
-        public RepositoryCubos(CubosContext context)
+        public RepositoryCubos(CubosContext context, SecretClient secret)
         {
             this.context = context;
+            this.secretClient = secret;
         }
 
         public async Task<List<CompraCubo>> GetComprasCubos(int iduser)
@@ -21,14 +24,33 @@ namespace ApiCubosAzure.Repositories
 
         public async Task<List<Cubo>> GetCubos()
         {
-            return await this.context.Cubos.ToListAsync();
+            List<Cubo> cubos = await this.context.Cubos.ToListAsync();
+
+            KeyVaultSecret secret = await this.secretClient.GetSecretAsync("blobsmc");
+
+            string bloburl = secret.Value;
+
+            foreach (var cubo in cubos)
+            {
+                cubo.Imagen = bloburl + "cubos/" + cubo.Imagen;
+            }
+
+            return cubos;
         }
 
         public async Task<List<Cubo>> GetCubosMarca(string marca)
         {
-            List<Cubo> personajes = await this.context.Cubos.Where(x => x.Marca == marca).ToListAsync();
+            List<Cubo> cubos = await this.context.Cubos.Where(x => x.Marca == marca).ToListAsync();
 
-            return personajes;
+            KeyVaultSecret secret = await this.secretClient.GetSecretAsync("blobsmc");
+
+            string bloburl = secret.Value;
+
+            foreach (var cubo in cubos)
+            {
+                cubo.Imagen = bloburl + "cubos/" + cubo.Imagen;
+            }
+            return cubos;
         }
 
         public async Task RegistrarUsuarioAsync(Usuario user)
